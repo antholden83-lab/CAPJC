@@ -1,0 +1,178 @@
+{
+  "users": [
+    {
+      "id": "e6531ea6-51ef-44bd-a4b7-84cc49144d93",
+      "role": "admin",
+      "firstName": "Job Club",
+      "lastName": "Admin",
+      "email": "admin@jobclub.local",
+      "passwordHash": "1882e75bfc2c5fea1cb517653cf33476:2c31bb0c2eecba2a2090e9cdcc2693940873280eacbcb3b60d4dca5f58ca4f06",
+      "createdAt": "2026-06-01T17:26:15.067Z"
+    },
+    {
+      "id": "c3f8e942-0063-41f2-beba-65f7984c75a1",
+      "role": "member",
+      "firstName": "Anthony",
+      "lastName": "Holden",
+      "email": "anthonyholden@capuk.org",
+      "passwordHash": "6cbd8a59af48ae22ddccea10ba41c461:6d236a7c2a7ff42cf1fad90c2030f85f766f97d0bdd5824043677e91b7257267",
+      "createdAt": "2026-06-01T17:31:02.976Z"
+    }
+  ],
+  "clients": [
+    {
+      "scores": {
+        "Confidence and motivation": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "Skills and experience": [
+          "4",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "Job search": [
+          "3",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "Job application": [
+          "2",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ]
+      },
+      "weeks": [
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        },
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        },
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        },
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        },
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        },
+        {
+          "done": false,
+          "note": "",
+          "madGoal": "",
+          "deadline": "",
+          "motivating": false,
+          "achievable": false,
+          "hasDeadline": false
+        }
+      ],
+      "cvUploads": [],
+      "id": "93080c59-0fd4-420d-90f5-e46a58083015",
+      "userId": "c3f8e942-0063-41f2-beba-65f7984c75a1",
+      "firstName": "Anthony",
+      "lastName": "Holden",
+      "email": "anthonyholden@capuk.org",
+      "phone": "07487378814",
+      "date": "2026-06-01",
+      "messages": [],
+      "createdAt": "2026-06-01T17:31:02.976Z",
+      "updatedAt": "2026-06-01T17:44:50.409Z",
+      "address": "13 College Close",
+      "postcode": "BB12 8TE",
+      "employmentStatus": "Employed",
+      "reasons": "",
+      "notes": "",
+      "knownAs": "",
+      "heardAbout": "CAP",
+      "lastPaidWork": "",
+      "capUpdates": ""
+    }
+  ],
+  "announcements": [
+    {
+      "id": "34a155a2-c185-433d-942e-91e63d0fa214",
+      "title": "Announcement",
+      "body": "hoope you are well look forward to seeing you ",
+      "createdAt": "2026-06-01T17:45:14.920Z"
+    },
+    {
+      "id": "667b44f9-32be-4d90-9e61-d7d5f8a978d7",
+      "title": "Announcement",
+      "body": "Hope you enjoy the course",
+      "createdAt": "2026-06-01T17:42:50.359Z"
+    }
+  ],
+  "outbox": [
+    {
+      "id": "5da829b3-f233-426f-b6f2-d2a6cd68a219",
+      "kind": "announcement",
+      "to": "anthonyholden@capuk.org",
+      "name": "Anthony Holden",
+      "subject": "Announcement",
+      "body": "hoope you are well look forward to seeing you ",
+      "createdAt": "2026-06-01T17:45:14.920Z",
+      "sent": false
+    },
+    {
+      "id": "09e21d10-c949-44e1-b739-8e9fe18a622e",
+      "kind": "announcement",
+      "to": "anthonyholden@capuk.org",
+      "name": "Anthony Holden",
+      "subject": "Announcement",
+      "body": "Hope you enjoy the course",
+      "createdAt": "2026-06-01T17:42:50.359Z",
+      "sent": false
+    }
+  ],
+  "sessions": {
+    "e69d0486fdeb6196a59895c9e678ddea0ad24ee533a126f2": {
+      "userId": "c3f8e942-0063-41f2-beba-65f7984c75a1",
+      "createdAt": "2026-06-01T17:45:33.858Z"
+    }
+  }
+}

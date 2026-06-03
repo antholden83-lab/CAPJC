@@ -1,0 +1,72 @@
+# Job Club Portal Go-Live Checklist
+
+## What is ready
+
+- Admin login and dashboard.
+- Member sign-up with email and password.
+- Members update their own details, weekly goals, scores, notes, and CV uploads.
+- Admin can view all members.
+- Admin can send messages, announcements, and weekly updates.
+- PostgreSQL storage when `DATABASE_URL` is set.
+- Email sending when SMTP settings are set.
+- S3-compatible CV storage when S3 settings are set.
+- Local file storage still works for testing on your computer.
+
+## Recommended hosting route
+
+Use Render:
+
+1. Create a GitHub repository for this `job-club-app` folder.
+2. Push these files to GitHub.
+3. In Render, create a new Blueprint and select the GitHub repository.
+4. Render will read `render.yaml` and create:
+   - one web service
+   - one PostgreSQL database
+5. Set these environment variables in Render:
+   - `APP_URL` to the public Render URL
+   - `ADMIN_EMAIL` to your email
+   - `ADMIN_PASSWORD` to a strong password
+6. Deploy the service.
+7. Open the public URL and log in with the admin account.
+8. Change your password in the app.
+
+## Email
+
+To send real emails, add SMTP settings:
+
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `EMAIL_FROM`
+
+Until those are set, the app still keeps an outbox showing what would have been sent.
+
+## CV uploads
+
+For live use, set S3-compatible storage:
+
+- `S3_BUCKET`
+- `S3_REGION`
+- `S3_ACCESS_KEY_ID`
+- `S3_SECRET_ACCESS_KEY`
+
+Use a private bucket. CVs contain personal data and should not be public.
+
+## Client link
+
+After the app is live, send clients your public app URL. They click `Member sign up`.
+
+Example:
+
+`https://your-job-club-portal.onrender.com`
+
+## Data protection reminders
+
+- Use a strong admin password.
+- Only collect details you need.
+- Keep CV storage private.
+- Tell members what you store and why.
+- Delete member data when you no longer need it.
+- Do not send sensitive personal information in ordinary email messages.

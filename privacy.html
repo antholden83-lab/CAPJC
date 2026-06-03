@@ -1,0 +1,331 @@
+const weeks = [
+  ["Finding your motivation", "Main reason they want to find work"],
+  ["Overcoming obstacles", "Obstacle to overcome this week"],
+  ["Discovering strengths", "Strengths or skills identified"],
+  ["Getting to know employers", "Employer or volunteering action"],
+  ["CVs and applications", "CV or application task"],
+  ["Interviews and ready for work", "Interview or work-readiness step"],
+];
+
+const scoreAreas = ["Confidence and motivation", "Skills and experience", "Job search", "Job application"];
+const $ = selector => document.querySelector(selector);
+const loginView = $("#loginView");
+const appView = $("#appView");
+const form = $("#clientForm");
+
+let user = null;
+let clients = [];
+let currentId = null;
+let memberClient = null;
+let announcements = [];
+let publicAppUrl = window.location.origin;
+
+function blankClient() {
+  return {
+    id: null,
+    firstName: "",
+    lastName: "",
+    knownAs: "",
+    phone: "",
+    email: "",
+    scores: Object.fromEntries(scoreAreas.map(area => [area, Array(6).fill("")])),
+    weeks: weeks.map(() => ({ done: false, note: "", madGoal: "", deadline: "", motivating: false, achievable: false, hasDeadline: false })),
+    messages: [],
+    cvUploads: [],
+  };
+}
+
+function nameOf(client) {
+  return [client.knownAs || client.firstName, client.lastName].filter(Boolean).join(" ") || "Unnamed client";
+}
+
+async function api(url, options = {}) {
+  const response = await fetch(url, { headers: { "Content-Type": "application/json", ...(options.headers || {}) }, ...options });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || "Something went wrong");
+  return body;
+}
+
+function showStatus(text) {
+  $("#statusText").textContent = text;
+}
+
+function renderScores(client = blankClient()) {
+  $("#scoreBoard").innerHTML = scoreAreas.map(area => `
+    <div class="score-row">
+      <div class="score-label">${area}</div>
+      ${Array.from({ length: 6 }, (_, i) => `
+        <label class="score-box"><span>Week ${i + 1}</span><input type="number" min="0" max="10" data-score-area="${area}" data-score-week="${i}" value="${client.scores?.[area]?.[i] || ""}"></label>
+      `).join("")}
+    </div>
+  `).join("");
+}
+
+function renderWeeks(client = blankClient()) {
+  $("#weeks").innerHTML = weeks.map(([title, prompt], index) => {
+    const saved = client.weeks?.[index] || {};
+    return `
+      <article class="week">
+        <div class="week-head">
+          <div class="week-title"><span class="week-num">${index + 1}</span><div><h3>${title}</h3><small>${prompt}</small></div></div>
+          <label class="pill"><input type="checkbox" data-week-done="${index}" ${saved.done ? "checked" : ""}> Completed</label>
+        </div>
+        <div class="week-fields">
+          <label>${prompt}<textarea rows="3" data-week-note="${index}">${saved.note || ""}</textarea></label>
+          <label>MAD goal<textarea rows="3" data-week-goal="${index}">${saved.madGoal || ""}</textarea></label>
+          <label>Deadline<input type="date" data-week-deadline="${index}" value="${saved.deadline || ""}"></label>
+          <div class="checks">
+            <label><input type="checkbox" data-week-check="${index}" data-check-name="motivating" ${saved.motivating ? "checked" : ""}> Motivating</label>
+            <label><input type="checkbox" data-week-check="${index}" data-check-name="achievable" ${saved.achievable ? "checked" : ""}> Achievable</label>
+            <label><input type="checkbox" data-week-check="${index}" data-check-name="hasDeadline" ${saved.hasDeadline ? "checked" : ""}> Deadline</label>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderUploads(client = blankClient()) {
+  $("#uploadsList").innerHTML = client.cvUploads?.length
+    ? client.cvUploads.map(file => `<div class="upload-item"><strong>${file.name}</strong><span>${new Date(file.uploadedAt).toLocaleString()}</span></div>`).join("")
+    : "<p>No CVs uploaded yet.</p>";
+}
+
+function loadClient(client) {
+  currentId = client.id;
+  const merged = { ...blankClient(), ...client };
+  form.reset();
+  for (const element of form.elements) {
+    if (element.name && Object.hasOwn(merged, element.name)) element.value = merged[element.name] || "";
+  }
+  renderScores(merged);
+  renderWeeks(merged);
+  renderUploads(merged);
+  $("#pageTitle").textContent = nameOf(merged);
+  $("#deleteBtn").style.display = user?.role === "admin" && currentId ? "inline-block" : "none";
+  renderClientList();
+  renderMemberFeed(merged);
+}
+
+function collectClient() {
+  const existing = user.role === "admin" ? (clients.find(client => client.id === currentId) || blankClient()) : memberClient;
+  const data = { ...existing, id: currentId };
+  new FormData(form).forEach((value, key) => data[key] = value);
+  data.scores = Object.fromEntries(scoreAreas.map(area => [area, Array(6).fill("")]));
+  document.querySelectorAll("[data-score-area]").forEach(input => data.scores[input.dataset.scoreArea][Number(input.dataset.scoreWeek)] = input.value);
+  data.weeks = weeks.map((_, index) => ({
+    done: $(`[data-week-done="${index}"]`).checked,
+    note: $(`[data-week-note="${index}"]`).value,
+    madGoal: $(`[data-week-goal="${index}"]`).value,
+    deadline: $(`[data-week-deadline="${index}"]`).value,
+    motivating: $(`[data-week-check="${index}"][data-check-name="motivating"]`).checked,
+    achievable: $(`[data-week-check="${index}"][data-check-name="achievable"]`).checked,
+    hasDeadline: $(`[data-week-check="${index}"][data-check-name="hasDeadline"]`).checked,
+  }));
+  return data;
+}
+
+function renderClientList() {
+  if (user?.role !== "admin") return;
+  const search = $("#searchInput").value.toLowerCase();
+  const filtered = clients.filter(client => [nameOf(client), client.phone, client.email].join(" ").toLowerCase().includes(search));
+  $("#clientList").innerHTML = filtered.length ? "" : "<p>No clients yet.</p>";
+  filtered.forEach(client => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `client-item${client.id === currentId ? " active" : ""}`;
+    button.innerHTML = `<strong>${nameOf(client)}</strong><span>${client.email || client.phone || "No contact added"}</span>`;
+    button.addEventListener("click", () => loadClient(client));
+    $("#clientList").appendChild(button);
+  });
+  $("#messageRecipient").innerHTML = `<option value="all">All members</option>${clients.map(client => `<option value="${client.id}">${nameOf(client)}</option>`).join("")}`;
+}
+
+function renderMemberFeed(client = blankClient()) {
+  const items = [
+    ...announcements.map(item => ({ ...item, tag: "Announcement" })),
+    ...(client.messages || []).map(item => ({ ...item, title: item.subject, tag: "Message" })),
+  ].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  $("#memberMessages").innerHTML = items.length
+    ? items.map(item => `<article class="feed-item"><strong>${item.tag}: ${item.title}</strong><p>${item.body}</p><small>${new Date(item.createdAt).toLocaleString()}</small></article>`).join("")
+    : "<p>No messages yet.</p>";
+}
+
+async function loadAdmin() {
+  clients = await api("/api/admin/clients");
+  const outbox = await api("/api/outbox");
+  $("#outboxList").innerHTML = outbox.length
+    ? outbox.slice(0, 20).map(item => `<div class="upload-item"><strong>${item.to}</strong><span>${item.subject}</span></div>`).join("")
+    : "<p>No email drafts yet.</p>";
+  loadClient(clients[0] || blankClient());
+}
+
+async function loadMember() {
+  const data = await api("/api/member/me");
+  memberClient = data.client || blankClient();
+  announcements = data.announcements || [];
+  loadClient(memberClient);
+}
+
+async function enterApp(loggedInUser) {
+  user = loggedInUser;
+  loginView.classList.add("hidden");
+  appView.classList.remove("hidden");
+  appView.classList.toggle("member-shell", user.role !== "admin");
+  $("#roleText").textContent = user.role === "admin" ? "Admin control" : "Member portal";
+  $("#adminSide").classList.toggle("hidden", user.role !== "admin");
+  $("#adminTools").classList.toggle("hidden", user.role !== "admin");
+  $("#memberFeed").classList.toggle("hidden", user.role === "admin");
+  $("#exportBtn").style.display = user.role === "admin" ? "inline-block" : "none";
+  $("#adminPasswordTools").classList.toggle("hidden", user.role !== "admin");
+  $("#signupLink").value = publicAppUrl;
+  $("#registrationHelp").textContent = user.role === "admin" ? "You can see and update every client." : "You can update your own details.";
+  if (user.role === "admin") await loadAdmin();
+  else await loadMember();
+}
+
+$("#loginForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  try {
+    const data = Object.fromEntries(new FormData(event.target));
+    const result = await api("/api/login", { method: "POST", body: JSON.stringify(data) });
+    await enterApp(result.user);
+  } catch (error) {
+    $("#loginStatus").textContent = error.message;
+  }
+});
+
+$("#registerForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  try {
+    const data = Object.fromEntries(new FormData(event.target));
+    data.privacyAccepted = Boolean(data.privacyAccepted);
+    await api("/api/register", { method: "POST", body: JSON.stringify(data) });
+    $("#showLogin").click();
+    $("#loginForm [name='email']").value = data.email;
+    $("#loginForm [name='password']").value = "";
+    $("#loginStatus").textContent = "Account created. Log in with the password just chosen.";
+  } catch (error) {
+    $("#registerStatus").textContent = error.message;
+  }
+});
+
+$("#showLogin").addEventListener("click", () => {
+  $("#loginForm").classList.remove("hidden");
+  $("#registerForm").classList.add("hidden");
+  $("#showLogin").classList.add("active");
+  $("#showRegister").classList.remove("active");
+});
+
+$("#showRegister").addEventListener("click", () => {
+  $("#registerForm").classList.remove("hidden");
+  $("#loginForm").classList.add("hidden");
+  $("#showRegister").classList.add("active");
+  $("#showLogin").classList.remove("active");
+  $("#registerStatus").textContent = "Use a new email address for each member.";
+});
+
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  showStatus("Saving...");
+  const client = collectClient();
+  if (user.role === "admin") {
+    const saved = await api("/api/admin/clients", { method: "POST", body: JSON.stringify(client) });
+    const index = clients.findIndex(item => item.id === saved.id);
+    if (index >= 0) clients[index] = saved;
+    else clients.unshift(saved);
+    loadClient(saved);
+  } else {
+    memberClient = await api("/api/member/me", { method: "POST", body: JSON.stringify(client) });
+    loadClient(memberClient);
+  }
+  showStatus("Saved");
+});
+
+$("#newClientBtn").addEventListener("click", () => loadClient(blankClient()));
+$("#searchInput").addEventListener("input", renderClientList);
+$("#logoutBtn").addEventListener("click", async () => { await api("/api/logout", { method: "POST" }); location.reload(); });
+$("#deleteBtn").addEventListener("click", async () => {
+  if (!currentId || !confirm("Delete this client record?")) return;
+  await api(`/api/admin/clients/${currentId}`, { method: "DELETE" });
+  clients = clients.filter(client => client.id !== currentId);
+  loadClient(clients[0] || blankClient());
+});
+$("#exportBtn").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(clients, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `job-club-clients-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+});
+$("#sendMessageBtn").addEventListener("click", async () => {
+  await api("/api/messages", { method: "POST", body: JSON.stringify({ clientId: $("#messageRecipient").value, subject: $("#messageSubject").value, body: $("#messageBody").value }) });
+  $("#messageBody").value = "";
+  showStatus("Message saved and added to outbox");
+  await loadAdmin();
+});
+$("#postAnnouncementBtn").addEventListener("click", async () => {
+  await api("/api/announcements", { method: "POST", body: JSON.stringify({ title: $("#announcementTitle").value, body: $("#announcementBody").value }) });
+  $("#announcementBody").value = "";
+  showStatus("Announcement posted");
+  await loadAdmin();
+});
+$("#weeklyBtn").addEventListener("click", async () => {
+  await api("/api/weekly-update", { method: "POST", body: JSON.stringify({ weekNumber: $("#weeklyNumber").value }) });
+  showStatus("Weekly update added to outbox");
+  await loadAdmin();
+});
+$("#uploadBtn").addEventListener("click", async () => {
+  if (!$("#cvInput").files.length) return showStatus("Choose a CV file first");
+  const data = new FormData();
+  data.append("clientId", currentId || "");
+  data.append("cv", $("#cvInput").files[0]);
+  const response = await fetch("/api/upload", { method: "POST", body: data });
+  if (!response.ok) return showStatus("CV upload failed");
+  $("#cvInput").value = "";
+  showStatus("CV uploaded");
+  if (user.role === "admin") await loadAdmin();
+  else await loadMember();
+});
+
+api("/api/session").then(result => {
+  publicAppUrl = result.appUrl || window.location.origin;
+  if (result.user) enterApp(result.user);
+}).catch(() => {});
+
+$("#copySignupBtn").addEventListener("click", async () => {
+  await navigator.clipboard.writeText($("#signupLink").value);
+  showStatus("Client sign-up link copied");
+});
+
+$("#changePasswordBtn").addEventListener("click", async () => {
+  try {
+    await api("/api/change-password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword: $("#currentPassword").value,
+        newPassword: $("#newPassword").value,
+      }),
+    });
+    $("#currentPassword").value = "";
+    $("#newPassword").value = "";
+    showStatus("Password changed");
+  } catch (error) {
+    showStatus(error.message);
+  }
+});
+
+$("#resetMemberPasswordBtn").addEventListener("click", async () => {
+  if (!currentId) return showStatus("Select a member first");
+  try {
+    const result = await api("/api/admin/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ clientId: currentId }),
+    });
+    $("#resetPasswordResult").textContent = `Temporary password: ${result.password}`;
+    showStatus("Temporary password created");
+    await loadAdmin();
+  } catch (error) {
+    showStatus(error.message);
+  }
+});

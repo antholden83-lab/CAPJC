@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Job Club Portal</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main id="loginView" class="auth">
+      <section class="auth-box">
+        <div class="brand">
+          <span class="mark">JC</span>
+          <div>
+            <h1>Job Club</h1>
+            <p>Admin and member portal</p>
+          </div>
+        </div>
+
+        <div class="tabs">
+          <button id="showLogin" class="active" type="button">Log in</button>
+          <button id="showRegister" type="button">Member sign up</button>
+        </div>
+
+        <form id="loginForm" class="stack">
+          <label>Email<input name="email" type="email" required value="admin@jobclub.local"></label>
+          <label>Password<input name="password" type="password" required value="ChangeMe123!"></label>
+          <button class="primary" type="submit">Log in</button>
+          <p id="loginStatus" class="muted">Admin starter login is filled in for you.</p>
+        </form>
+
+        <form id="registerForm" class="stack hidden">
+          <label>First name<input name="firstName" required></label>
+          <label>Last name<input name="lastName" required></label>
+          <label>Email<input name="email" type="email" required></label>
+          <label>Phone<input name="phone" type="tel"></label>
+          <label>Password<input name="password" type="password" required minlength="8"></label>
+          <label class="checkline"><input name="privacyAccepted" type="checkbox" value="yes" required> I agree that Job Club can store my details, goals, messages, and CV uploads to support me through the course. <a href="/privacy.html" target="_blank" rel="noopener">Privacy notice</a></label>
+          <button class="primary" type="submit">Create member account</button>
+          <p id="registerStatus" class="muted">Use a new email address for each member.</p>
+        </form>
+      </section>
+    </main>
+
+    <main id="appView" class="shell hidden">
+      <section id="adminSide" class="sidebar">
+        <div class="brand">
+          <span class="mark">JC</span>
+          <div>
+            <h1>Job Club</h1>
+            <p id="roleText">Admin</p>
+          </div>
+        </div>
+        <button class="primary full" id="newClientBtn">Add client</button>
+        <label class="search">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Name, phone, email">
+        </label>
+        <div id="clientList" class="client-list"></div>
+      </section>
+
+      <section class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">6 week course</p>
+            <h2 id="pageTitle">Dashboard</h2>
+          </div>
+          <div class="top-actions">
+            <button id="exportBtn" class="ghost" type="button">Export data</button>
+            <button id="deleteBtn" class="danger" type="button">Delete</button>
+            <button id="logoutBtn" class="ghost" type="button">Log out</button>
+          </div>
+        </header>
+
+        <form id="clientForm" class="content">
+          <section id="adminTools" class="panel">
+            <div class="panel-title">
+              <h3>Messages and announcements</h3>
+              <p>These appear in member portals and are added to the email outbox.</p>
+            </div>
+            <div class="link-box">
+              <strong>Client sign-up link</strong>
+              <input id="signupLink" readonly value="">
+              <button id="copySignupBtn" class="ghost" type="button">Copy link</button>
+            </div>
+            <div class="message-grid">
+              <div class="stack">
+                <label>Send to<select id="messageRecipient"><option value="all">All members</option></select></label>
+                <label>Subject<input id="messageSubject" placeholder="Message from Job Club"></label>
+                <label>Message<textarea id="messageBody" rows="4"></textarea></label>
+                <button id="sendMessageBtn" class="secondary" type="button">Send message</button>
+              </div>
+              <div class="stack">
+                <label>Announcement title<input id="announcementTitle" placeholder="Next session reminder"></label>
+                <label>Announcement<textarea id="announcementBody" rows="4"></textarea></label>
+                <button id="postAnnouncementBtn" class="secondary" type="button">Post announcement</button>
+                <div class="weekly">
+                  <label>Week number<input id="weeklyNumber" type="number" min="1" max="6" value="1"></label>
+                  <button id="weeklyBtn" class="ghost" type="button">Create weekly update</button>
+                </div>
+              </div>
+            </div>
+            <details class="outbox">
+              <summary>Email outbox</summary>
+              <div id="outboxList"></div>
+            </details>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Account security</h3>
+              <p>Change your password regularly.</p>
+            </div>
+            <div class="message-grid">
+              <div class="stack">
+                <label>Current password<input id="currentPassword" type="password"></label>
+                <label>New password<input id="newPassword" type="password" minlength="8"></label>
+                <button id="changePasswordBtn" class="secondary" type="button">Change password</button>
+              </div>
+              <div id="adminPasswordTools" class="stack">
+                <p class="muted">For a selected member, create a temporary password if they get locked out.</p>
+                <button id="resetMemberPasswordBtn" class="ghost" type="button">Reset selected member password</button>
+                <p id="resetPasswordResult" class="muted"></p>
+              </div>
+            </div>
+          </section>
+
+          <section id="memberFeed" class="panel hidden">
+            <div class="panel-title">
+              <h3>Updates from Job Club</h3>
+              <p>Messages and announcements for you.</p>
+            </div>
+            <div id="memberMessages" class="feed"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Registration</h3>
+              <p id="registrationHelp">Client details.</p>
+            </div>
+            <div class="grid">
+              <label>Date<input name="date" type="date"></label>
+              <label>First name<input name="firstName" required></label>
+              <label>Last name<input name="lastName" required></label>
+              <label>Known as<input name="knownAs"></label>
+              <label>Phone / mobile<input name="phone" type="tel"></label>
+              <label>Email<input name="email" type="email"></label>
+              <label class="wide">Address<textarea name="address" rows="2"></textarea></label>
+              <label>Postcode<input name="postcode"></label>
+              <label>Heard about us<select name="heardAbout"><option></option><option>CAP</option><option>Church</option><option>Foodbank</option><option>Jobcentre Plus</option><option>Leaflet</option><option>Website</option><option>Word of Mouth</option><option>Other</option></select></label>
+              <label>Employment status<select name="employmentStatus"><option></option><option>Employed</option><option>Unemployed</option><option>Part-time</option></select></label>
+              <label>Last paid work<input name="lastPaidWork" type="month"></label>
+              <label>CAP updates<select name="capUpdates"><option></option><option>Yes</option><option>No</option></select></label>
+              <label class="wide">Reasons for attending<textarea name="reasons" rows="3"></textarea></label>
+              <label class="wide">Notes<textarea name="notes" rows="3"></textarea></label>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Goal scores</h3>
+              <p>Rate each area out of 10 each week.</p>
+            </div>
+            <div id="scoreBoard" class="score-board"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Course guide</h3>
+              <p>Weekly notes, MAD goals, and progress.</p>
+            </div>
+            <div id="weeks" class="weeks"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-title">
+              <h3>CV uploads</h3>
+              <p>Uploaded CVs are saved for the Job Club leader.</p>
+            </div>
+            <div class="upload-row">
+              <input id="cvInput" type="file" accept=".pdf,.doc,.docx,.rtf,.txt">
+              <button id="uploadBtn" type="button" class="secondary">Upload CV</button>
+            </div>
+            <div id="uploadsList" class="uploads"></div>
+          </section>
+
+          <footer class="savebar">
+            <p id="statusText">Ready</p>
+            <button class="primary" type="submit">Save</button>
+          </footer>
+        </form>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
